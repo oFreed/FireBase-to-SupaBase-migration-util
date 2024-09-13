@@ -39,7 +39,7 @@ exports.__esModule = true;
 var supabase_js_1 = require("@supabase/supabase-js");
 var fs_1 = require("fs");
 var supabase_keys_1 = require("./supabase-keys");
-var supabase = (0, supabase_js_1.createClient)(supabase_keys_1.keys.SUPABASE_URL, supabase_keys_1.keys.SUPABASE_KEY);
+var supabase = (0, supabase_js_1.createClient)(supabase_keys_1.SUPABASE_URL, supabase_keys_1.SUPABASE_KEY);
 var args = process.argv.slice(2);
 if (args.length < 3) {
     // console.log('Usage: node upload.js <prefix> <folder> <bucket> [<batchSize>] [<limit>] [<token>]');
@@ -71,15 +71,15 @@ catch (err) {
     console.error(err);
     process.exit(1);
 }
-var createBucket = function (bucket) { return __awaiter(void 0, void 0, void 0, function () {
+var getBucket = function (bucket) { return __awaiter(void 0, void 0, void 0, function () {
     var _a, data, error;
     return __generator(this, function (_b) {
         switch (_b.label) {
             case 0:
-                console.log('...creating bucket:', bucket);
+                console.log('...getting bucket:', bucket);
                 return [4 /*yield*/, supabase
                         .storage
-                        .createBucket(bucket, { public: false })];
+                        .getBucket(bucket)];
             case 1:
                 _a = _b.sent(), data = _a.data, error = _a.error;
                 if (error) {
@@ -88,7 +88,7 @@ var createBucket = function (bucket) { return __awaiter(void 0, void 0, void 0, 
                         console.log("bucket ".concat(bucket, " already exists"));
                     }
                     else {
-                        console.error('error creating bucket:', error);
+                        console.error('error getting bucket:', error);
                         process.exit(1);
                     }
                 }
@@ -111,6 +111,7 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                 file = files.shift();
                 count++;
                 console.log("uploading ".concat(count, " of ").concat(totalCount, " to bucket ").concat(bucket, ": ").concat(file));
+                fs_1.appendFileSync('uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
                 contents = (0, fs_1.readFileSync)("./".concat(folder, "/").concat(file));
                 return [4 /*yield*/, supabase
                         .storage
@@ -137,10 +138,10 @@ var mainLoop = function () { return __awaiter(void 0, void 0, void 0, function (
     var result;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, createBucket(bucket)];
+            case 0: return [4 /*yield*/, getBucket(bucket)];
             case 1:
                 result = _a.sent();
-                console.log('...created bucket:', result);
+                console.log('...getting bucket:', result);
                 processBatch(files);
                 return [2 /*return*/];
         }

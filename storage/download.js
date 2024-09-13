@@ -4,7 +4,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result && (result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected)); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -17,7 +17,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         while (_) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
+            if (!op || !Array.isArray(op) || op[0] === undefined) {
+                return;
+            }            switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
                 case 5: _.label++; y = op[1]; op = [0]; continue;
@@ -129,10 +131,20 @@ function processBatch(fileSet, queryForNextPage) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    console.log('downloading: ', file.name);
+                    const file_name = file.name.replace('meetings/', '')
+                    if (fs_1.existsSync('downloaded_files.log')) {
+                        const logData = fs_1.readFileSync('downloaded_files.log', 'utf8');
+                        if (logData.includes(file_name)){
+                            console.log('Files already downloaded: ', file_name);
+                            processBatch(fileSet, queryForNextPage);  // Continue with the next file
+                            return; 
+                        }
+                    }
+                    console.log('downloading: ', file_name);
+                    fs_1.appendFileSync('downloaded_files.log', `${file_name}\n`, 'utf8');  // Write to the log file
                     return [4 /*yield*/, storage.bucket((0, utils_1.getBucketName)())
                             .file(file.name)
-                            .download({ destination: "./".concat(folder, "/").concat(encodeURIComponent(file.name)) })];
+                            .download({ destination: "./".concat(folder, "/").concat(encodeURIComponent(file_name)) })];
                 case 2:
                     err = (_a.sent())[0];
                     if (err) {
