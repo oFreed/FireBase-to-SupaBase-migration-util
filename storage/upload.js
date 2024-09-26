@@ -4,7 +4,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        function step(result) { result && (result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected)); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -17,6 +17,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         while (_) try {
             if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
             if (y = 0, t) op = [op[0] & 2, t.value];
+            if (!op || !Array.isArray(op) || op[0] === undefined) {
+                return;
+            }   
             switch (op[0]) {
                 case 0: case 1: t = op; break;
                 case 4: _.label++; return { value: op[1], done: false };
@@ -109,7 +112,16 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                 return [2 /*return*/];
             case 1:
                 file = files.shift();
+                const file_name = `${file.replace('%2F', '/')}\n`
                 count++;
+                if (fs_1.existsSync('uploaded_files.log')) {
+                    const logData = fs_1.readFileSync('uploaded_files.log', 'utf8');
+                    if (logData.includes(file_name)){
+                        console.log('Files already uploaded: ', file_name);
+                        processBatch(files);  // Continue with the next file
+                        return; 
+                    }
+                }
                 console.log("uploading ".concat(count, " of ").concat(totalCount, " to bucket ").concat(bucket, ": ").concat(file));
                 fs_1.appendFileSync('uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
                 contents = (0, fs_1.readFileSync)("./".concat(folder, "/").concat(file));
