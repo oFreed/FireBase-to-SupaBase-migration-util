@@ -122,7 +122,7 @@ catch (err) {
 var storage = (0, utils_1.getStorageInstance)();
 function processBatch(fileSet, queryForNextPage) {
     return __awaiter(this, void 0, void 0, function () {
-        var file, err, err_1;
+        var file, err, err_1, file_name;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -131,7 +131,7 @@ function processBatch(fileSet, queryForNextPage) {
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 3, , 4]);
-                    const file_name = file.name.replace('meetings/', '')
+                    file_name = file.name.replace('meetings/', '')
                     if (fs_1.existsSync('downloaded_files.log')) {
                         const logData = fs_1.readFileSync('downloaded_files.log', 'utf8');
                         if (logData.includes(file_name)){
@@ -141,13 +141,17 @@ function processBatch(fileSet, queryForNextPage) {
                         }
                     }
                     console.log('downloading: ', file_name);
-                    fs_1.appendFileSync('downloaded_files.log', `${file_name}\n`, 'utf8');  // Write to the log file
                     return [4 /*yield*/, storage.bucket((0, utils_1.getBucketName)())
                             .file(file.name)
-                            .download({ destination: "./".concat(folder, "/").concat(encodeURIComponent(file_name)) })];
+                            .download({ destination: "./".concat(folder, "/").concat(encodeURIComponent(file_name))
+                            }).then( () => {
+                                fs_1.appendFileSync('downloaded_files.log', `${file_name}\n`, 'utf8')
+                            })];
                 case 2:
-                    err = (_a.sent())[0];
+                    err = (_a.sent())?.[0];
                     if (err) {
+                        file_name = file.name.replace('meetings/', '')
+                        fs_1.appendFileSync('failed_downloaded_files.log', `${file_name}\n`, 'utf8');
                         console.error('Error downloading file', err);
                     }
                     else {
@@ -157,7 +161,10 @@ function processBatch(fileSet, queryForNextPage) {
                     return [3 /*break*/, 4];
                 case 3:
                     err_1 = _a.sent();
+                    file_name = file.name.replace('meetings/', '')
+                    fs_1.appendFileSync('failed_downloaded_files.log', `${file_name}\n`, 'utf8');
                     console.log('err', err_1);
+                    processBatch(fileSet, queryForNextPage);
                     return [3 /*break*/, 4];
                 case 4: return [3 /*break*/, 6];
                 case 5:

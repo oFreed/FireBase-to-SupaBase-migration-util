@@ -51,6 +51,7 @@ if (args.length < 3) {
     console.log('                 to process all files use prefix ""');
     console.log('       <folder>: name of subfolder of files to upload, default is "downloads"');
     console.log('       <bucket>: name of bucket to upload to');
+    console.log('       <skipFailed>: "true" to skip retrying failed uploads, "false" or any other value to retry');
     // console.log('       <batchSize>: (optional), default is 100');
     // console.log('       <limit>: (optional), stop after processing this many files');
     // console.log('       <token>: (optional), begin processing at this pageToken');
@@ -59,6 +60,7 @@ if (args.length < 3) {
 var prefix = args[0] || '';
 var folder = args[1] || 'downloads';
 var bucket = args[2] || '';
+var skipFailed = args[3] == 'true';
 var files = [];
 var totalCount = 0;
 var count = 0;
@@ -123,7 +125,7 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                     }
                 }
                 console.log("uploading ".concat(count, " of ").concat(totalCount, " to bucket ").concat(bucket, ": ").concat(file));
-                fs_1.appendFileSync('uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
+                try {
                 contents = (0, fs_1.readFileSync)("./".concat(folder, "/").concat(file));
                 return [4 /*yield*/, supabase
                         .storage
@@ -131,12 +133,35 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                         .upload("".concat(decodeURIComponent(file)), contents, {
                         cacheControl: '3600',
                         upsert: true
-                    })];
+                    }).then( () => {
+                        fs_1.appendFileSync('uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8')
+                        })
+                    ];
+                } catch(e){
+                    fs_1.appendFileSync('failed_uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
+                    if (skipFailed) {
+                        processBatch(files);
+                    } else {
+                        throw e;
+                    }
+                }
+                    
             case 2:
+                try{
                 _a = _b.sent(), data = _a.data, error = _a.error;
+                }  catch (e) {
+                    if (skipFailed){
+                        processBatch(files);
+                    } else {
+                        throw e;
+                    }
+                }
                 if (error) {
                     console.error('error uploading file:', error);
-                    process.exit(1);
+                    fs_1.appendFileSync('failed_uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
+                    if (skipFailed) {
+                        processBatch(files);
+                    }
                 }
                 else {
                     processBatch(files);
