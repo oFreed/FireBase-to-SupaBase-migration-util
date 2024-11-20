@@ -13,3 +13,4 @@ storage/downloaded_files.log
 storage/uploaded_files.log
 storage/failed_downloaded_files.log
 storage/failed_uploaded_files.log
+storage/meetings
