@@ -35,6 +35,7 @@ Conversion is a two-step process:
 
 * `<prefix>`: the prefix of the files to download to process the root bucket use an empty prefix: ""
 * `<folder>`: (optional), name of subfolder for downloaded files, default is "downloads"
+* `<skipFailed>`: (optional), boolean to enable error skipping
 **note**: the selected folder will be created as a subfolder of the current folder, i.e. `./downloads/`
 * `<batchSize>`: (optional), default is 100
 * `<limit>`: (optional), stop after processing this many files
@@ -48,12 +49,10 @@ To process in batches using multiple command-line executions, you must use the s
 `node upload.js <prefix> <folder> <bucket>`
 * `<prefix>`: the prefix of the files to download to process all files use an empty prefix: ""
 * `<folder>`: name of subfolder of files to upload, default is "downloads"
+* `<skipFailed>`: (optional), boolean to enable error skipping
 
 **note**: the selected folder will be read as a subfolder of the current folder, i.e. `./downloads/`
 * `<bucket>`: name of bucket to upload to
-
-**note**: boolean value will enable skipping of failed files and logging it instead of dropping the process 
-* `<skipFailed>`: boolean to enable error skipping
 
 **note**: if the bucket does not exist it will be created as a `non-public` bucket
 

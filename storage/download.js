@@ -42,10 +42,11 @@ var fs_1 = require("fs");
 var utils_1 = require("./utils");
 var args = process.argv.slice(2);
 if (args.length < 1) {
-    console.log('Usage: node download.js <prefix> [<folder>] [<batchSize>] [<limit>] [<token>]');
+    console.log('Usage: node download.js <prefix> [<folder>] [<skipFailed>] [<batchSize>] [<limit>] [<token>]');
     console.log('       <prefix>: the prefix of the files to download');
     console.log('                 to process the root bucket use prefix ""');
     console.log('       <folder>: (optional), name of subfolder for downloaded files, default is "downloads"');
+    console.log('       <skipFailed>: "true" to skip retrying failed uploads, "false" or any other value to retry');
     console.log('       <batchSize>: (optional), default is 100');
     console.log('       <limit>: (optional), stop after processing this many files');
     console.log('       <token>: (optional), begin processing at this pageToken');
@@ -58,6 +59,7 @@ var count = 0;
 var downloaded = 0;
 var token = '';
 var folder = 'downloads';
+var skipFailed = 'true';
 /*
 
 {
@@ -90,7 +92,15 @@ catch (err) {
     process.exit(1);
 }
 try {
-    batchSize = parseInt(args[2] || '100');
+    skipFailed = args[2] || 'true' == 'true';
+}
+catch (err) {
+    console.error('error setting skipFailed:');
+    console.error(err);
+    process.exit(1);
+}
+try {
+    batchSize = parseInt(args[3] || '100');
 }
 catch (err) {
     console.error('error setting batchSize:');
@@ -98,7 +108,7 @@ catch (err) {
     process.exit(1);
 }
 try {
-    limit = parseInt(args[3] || '0');
+    limit = parseInt(args[4] || '0');
 }
 catch (err) {
     console.error('error setting limit:');
@@ -106,8 +116,8 @@ catch (err) {
     process.exit(1);
 }
 try {
-    if (args[4]) {
-        token = args[4];
+    if (args[5]) {
+        token = args[5];
         if (token.length !== 64) {
             console.error('token must be 20 characters long');
             process.exit(1);
@@ -148,9 +158,16 @@ function processBatch(fileSet, queryForNextPage) {
                                 fs_1.appendFileSync('downloaded_files.log', `${file_name}\n`, 'utf8')
                             })];
                 case 2:
+                    try{
                     err = (_a.sent())?.[0];
+                    } catch (e) {
+                        if (skipFailed === true){
+                            processBatch(fileSet, queryForNextPage);
+                        } else {
+                            throw e;
+                        }
+                    }
                     if (err) {
-                        file_name = file.name.replace('meetings/', '')
                         fs_1.appendFileSync('failed_downloaded_files.log', `${file_name}\n`, 'utf8');
                         console.error('Error downloading file', err);
                     }
@@ -164,7 +181,11 @@ function processBatch(fileSet, queryForNextPage) {
                     file_name = file.name.replace('meetings/', '')
                     fs_1.appendFileSync('failed_downloaded_files.log', `${file_name}\n`, 'utf8');
                     console.log('err', err_1);
-                    processBatch(fileSet, queryForNextPage);
+                    if (skipFailed === true) {
+                        processBatch(fileSet, queryForNextPage);
+                    } else {
+                        throw e;
+                    }
                     return [3 /*break*/, 4];
                 case 4: return [3 /*break*/, 6];
                 case 5:

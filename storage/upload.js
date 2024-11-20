@@ -60,7 +60,7 @@ if (args.length < 3) {
 var prefix = args[0] || '';
 var folder = args[1] || 'downloads';
 var bucket = args[2] || '';
-var skipFailed = args[3] == 'true';
+var skipFailed = args[3] || 'true' == 'true';
 var files = [];
 var totalCount = 0;
 var count = 0;
@@ -139,7 +139,7 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                     ];
                 } catch(e){
                     fs_1.appendFileSync('failed_uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
-                    if (skipFailed) {
+                    if (skipFailed === true) {
                         processBatch(files);
                     } else {
                         throw e;
@@ -150,7 +150,7 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                 try{
                 _a = _b.sent(), data = _a.data, error = _a.error;
                 }  catch (e) {
-                    if (skipFailed){
+                    if (skipFailed === true){
                         processBatch(files);
                     } else {
                         throw e;
@@ -158,9 +158,11 @@ var processBatch = function (files) { return __awaiter(void 0, void 0, void 0, f
                 }
                 if (error) {
                     console.error('error uploading file:', error);
-                    fs_1.appendFileSync('failed_uploaded_files.log', `${file.replace('%2F', '/')}\n`, 'utf8');  // Write to the log file
-                    if (skipFailed) {
+                    fs_1.appendFileSync('failed_uploaded_files.log', `${file.replace('%2F', '/')}\n123123\n`, 'utf8');  // Write to the log file
+                    if (skipFailed === true) {
                         processBatch(files);
+                    } else {
+                        throw error;
                     }
                 }
                 else {
