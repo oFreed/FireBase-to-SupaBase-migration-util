@@ -52,6 +52,9 @@ To process in batches using multiple command-line executions, you must use the s
 **note**: the selected folder will be read as a subfolder of the current folder, i.e. `./downloads/`
 * `<bucket>`: name of bucket to upload to
 
+**note**: boolean value will enable skipping of failed files and logging it instead of dropping the process 
+* `<skipFailed>`: boolean to enable error skipping
+
 **note**: if the bucket does not exist it will be created as a `non-public` bucket
 
 **note 2**: you will need to set permissions on this new bucket in the Supabase dashboard before users will have access to download any files in a newly-created bucket
